@@ -16,45 +16,20 @@
             <v-app-bar app color="cyan" dark>
                 <v-app-bar-title>
                     <div id="head"align="center">{{message}}</div>
-                    <v-btn outlined class="mr-4" color="grey darken-2" @click="calendar">Calendar</v-btn>
                 </v-app-bar-title>
             </v-app-bar>
             <v-main id="app">
                 <v-container>
-                    <v-row>
-                        <v-col cols="12" md="2">
-                            <a href="/write" method="get">
-                                <v-btn color="cyan" :style="{height:'50px', width:'80px', fontWeight:'bold', fontSize:'large'}">글작성</v-btn>        
-                            </a>
-                        </v-col>
-                    </v-row>
-            
                     <v-card>
-                        <v-card-title>게시판</v-card-title>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>번호</th>
-                                        <th>내용</th>
-                                        <th>작성자</th>
-                                        <th>업데이트</th>
-                                        <th>등록시간</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="item in list" :key="item.no">
-                                        <td>{{ item.no }}</td>
-                                        <td>{{ item.content }}</td>
-                                        <td>{{ item.author }}</td>
-                                        <td>{{ item.update }}</td>
-                                        <td>{{ item.created }}</td>
-                                        <td><v-btn @click="editBoard(item.no)" tile color="success"><v-icon left>mdi-pencil</v-icon>
-                                        Edit
-                                        </v-btn></td>
-                                        <td><a href="/"><v-btn tile color="error" @click="delBoard(item.no)">X</v-btn></a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <v-card-title></v-card-title>
+                        <v-form ref="form" @submit.prevent="save" v-model="valid" lazy-validation>
+                                <v-text-field id="author" name="author" type="text" v-model="author" label="작성자" required></v-text-field>
+                                <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required></v-text-field>
+                                    <a href="/">
+                                        <v-btn tile color="success" @click="udpate">수정 완료
+                                        </v-btn>
+                                    </a>
+                            </v-form>
                     </v-card>
                 </v-container>
             </v-main>
@@ -71,38 +46,45 @@
         const app = createApp({
             data() {
                 return {
-                    message: "메인 게시판",
+                    message: "test",
                     list:[],
-                    url:""
+                    author:"",
+                    content:""
                 }
             },
             methods: {
-                calendar() {
-                    location.href='/calendar'
-                },
-                delBoard:function(index) {
-                    console.log("test");
-                    console.log(index);
-                    axios.post("/board/delete",index)
-                    .then(res=>{console.log(res);})
-                },
-                editBoard:function(index) {
-                    this.url="/board/edit?id="+index;
-                    location.href=this.url;
+                udpate:function(){
+                    //db데이터 넣기
+
+                    axios({
+                        url:"/board/put?id="+<?php echo $id;?>,
+                        method:'post',
+                        data:{
+                            author:this.author,
+                            content:this.content
+                        },
+                        header:{ 'Content-type': 'application/json'}
+                    })
+                    .then(res => {
+                        console.log(res);
+                    }).catch(err =>{console.log(err);});
                 }
             },
             created() {
                 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-                axios.get("/board")
+                axios.get("/board/detail?id="+<?php echo $id;?>)
                     .then(res => {
                         for (let item in res['data']){
-                            console.log(item);
+				console.log(item);
+				this.message=res['data'][item]['id']+"번 게시판";
                             this.list.push({
                                 no:res['data'][item]['id'],
                                 content:res['data'][item]['content'],
                                 author:res['data'][item]['author'],
                                 update:res['data'][item]['updatetime'],
                                 created:res['data'][item]['createtime']});
+                            this.author = res['data'][item]['author'];
+                            this.content = res['data'][item]['content'];
                         }
                         console.log(res['data']);
                     });

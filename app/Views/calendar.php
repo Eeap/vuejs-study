@@ -12,7 +12,7 @@
     <div id="app">
         <v-app>
             <v-app-bar app color="cyan" dark absolute>
-                <v-toolbar-title>Calendar</v-toolbar-title>
+                <v-toolbar-title><v-btn outlined class="mr-4" color="grey darken-2" @click="main">Home</v-btn></v-toolbar-title>
             </v-app-bar>
             <v-main id="app">
                 <v-container>
@@ -29,7 +29,7 @@
                                     <div class="text-center">
                                         <v-menu v-model="menu" :close-on-content-click="false" :nudge-width="200" offset-x>
                                             <template v-slot:activator="{ on, attrs }">
-                                                <v-btn outlined class="mr-4" color="grey darken-2" v-bind="attrs" v-on="on">총 금액</v-btn>
+                                                <v-btn outlined class="mr-4" color="grey darken-2" v-bind="attrs" v-on="on"><v-icon small>mdi-arrow-up-bold-box-outline</v-icon></v-btn>
                                             </template>
 
                                             <v-card>
@@ -45,11 +45,11 @@
 
                                                 <v-list>
                                                     <v-list-item>
-                                                        <v-list-item-title>지출 금액 : {{ sum }}</v-list-item-title>
+                                                        <v-list-item-title>지출 금액 : {{ minus }}원</v-list-item-title>
                                                     </v-list-item>
 
                                                     <v-list-item>
-                                                        <v-list-item-title>수익 금액 : {{ sum }}</v-list-item-title>
+                                                        <v-list-item-title>수익 금액 : {{ plus }}원</v-list-item-title>
                                                     </v-list-item>
                                                 </v-list>
 
@@ -107,7 +107,9 @@
                                     </v-toolbar>
                                     <v-card-text>
                                         <v-text-field type="text" v-model="selectedEvent.details" label="내용" :readonly="readonly" outlined></v-text-field>
-                                        <v-text-field type="text" v-model="selectedEvent.name" label="금액" :readonly="readonly" outlined></v-text-field>
+                                        <v-currency-field v-model="selectedEvent.name" label="금액" filled outlined :decimal-length=0 :readonly="readonly"></v-currency-field>
+                                        <v-select :items="categories" v-model="selectedEvent.category" label="항목" dense outlined :readonly="readonly"></v-select>
+                                        <v-spacer></v-spacer>
                                         <v-btn :disabled="disabled" @click="editCalendar" icon><v-icon dark right>mdi-checkbox-marked-circle</v-icon></v-btn>
                                 </v-card-text>
                                     <v-card-actions><v-btn text color="secondary" @click="selectedOpen = false,disabled = true, readonly=true,reload()">Cancel</v-btn></v-card-actions>
@@ -123,7 +125,7 @@
                             <v-spacer></v-spacer>
                             <v-form ref="form" @submit.prevent="save" v-model="valid" lazy-validation>
                                 <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required outlined></v-text-field>
-                                <v-text-field id="money" name="money" type="text" v-model="money" label="금액" required outlined></v-text-field>
+                                <v-currency-field v-model="money" label="금액" filled outlined :decimal-length=0></v-currency-field>
                                 <v-select :items="categories" v-model="category" label="항목" dense outlined></v-select>
                                     <a href="/calendar">
                                     <v-btn color="success" class="mr-4" @click="register">
@@ -141,6 +143,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/v-currency-field"></script>
     <script>
         new Vue({
             el: '#app',
@@ -160,7 +163,6 @@
                     start:new Date(1999,0,1),
                     color:'red'
                 }],
-                colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
                 picker: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
                 content:"",
                 money:"",
@@ -169,7 +171,9 @@
                 selectedElement: null,
                 selectedOpen: false,
                 sum:0,
-                dialog:false
+                dialog:false,
+                plus:0,
+                minus:0,
             },
             mounted () {
                 this.$refs.calendar.checkChange()
@@ -180,6 +184,8 @@
                 },
                 calc(idx) {
                     this.sum=0
+                    this.plus=0
+                    this.minus=0
                     let str = this.$refs.calendar.title
                     let arr = str.split(' ')
                     var month=""
@@ -206,10 +212,16 @@
                         if (date.getFullYear()==parseInt(year)) {
                             console.log(date.getMonth()+1)
                             if (date.getMonth()+1==month) {
+                                if (items[i]['category']=="지출") {
+                                    this.minus+=parseInt(items[i]['name'])
+                                } else {
+                                    this.plus+=parseInt(items[i]['name'])
+                                }
                                 this.sum+=parseInt(items[i]['name'])
                             }
                         }
                     }
+                    this.sum=this.plus-this.minus
                     console.log("sum = "+this.sum)
                 },
                 change() {
@@ -309,6 +321,7 @@
                             year:year,
                             month:month,
                             day:day,
+                            category:event.category,
                         },
                         header:{ 'Content-type': 'application/json'}
                     })
@@ -317,6 +330,9 @@
                     }).catch(err =>{console.log(err);});
                     location.href='/calendar'
                 },
+                main() {
+                    location.href='/'
+                }
             },
             watch: {
                 events: function (newVal, oldVal) {
@@ -329,11 +345,14 @@
                 axios.get("/calendar/read")
                     .then(res => {
                         for (let item in res['data']){
-                            let color = this.colors[this.rnd(0, this.colors.length - 1)]
+                            let color = "deep-orange lighten-1"
                             let times = new Date(res['data'][item]['time'])
                             let hour = times.getHours()
                             let minute = times.getMinutes()
                             let seconds = times.getSeconds()
+                            if (res['data'][item]['category']=="수익") {
+                                color="light-blue accent-2"
+                            }
                             this.events.push({
                                 id:res['data'][item]['id'],
                                 name:res['data'][item]['money'],
@@ -341,16 +360,8 @@
                                 color:color,
                                 details:res['data'][item]['content'],
                                 timed:true,
-                                times:times
-                            });
-                            this.list.push({
-                                id:res['data'][item]['id'],
-                                money:res['data'][item]['money'],
-                                content:res['data'][item]['content'],
-                                year:res['data'][item]['year'],
-                                month:res['data'][item]['month'],
-                                day:res['data'][item]['day'],
-                                color:color
+                                times:times,
+                                category:res['data'][item]['category']
                             });
                         }
                     });
