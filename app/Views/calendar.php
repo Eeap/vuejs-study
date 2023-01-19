@@ -27,6 +27,38 @@
                                 <v-spacer></v-spacer>
                                 <v-toolbar-title>
                                     <div class="text-center">
+                                        <v-dialog v-model="dialogPayment" max-width="500px">
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn color="indigo" class="mr-2" v-bind="attrs" v-on="on" outlined icon>
+                                                    <v-icon>mdi-plus</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <v-card>
+                                                <v-card-title color="cyan">
+                                                    <span class="text-h5" align="center" justify="center">정기 항목 등록</span>
+                                                </v-card-title>
+                                                <v-divider></v-divider>
+                                                <v-card-text>
+                                                    <v-container>
+                                                        <v-form ref="form" @submit.prevent="save" lazy-validation>
+                                                            <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required outlined></v-text-field>
+                                                            <v-currency-field v-model="money" label="금액" filled outlined :decimal-length=0></v-currency-field>
+                                                            <v-select :items="categories" v-model="category" label="항목" dense outlined></v-select>
+                                                        </v-form>
+                                                    </v-container>
+                                                </v-card-text>
+                                                <v-card-actions>
+                                                    <v-spacer></v-spacer>
+                                                    <v-btn color="primary" class="mr-4" @click="register(),reload()" icon>
+                                                        <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
+                                                    </v-btn>
+                                                    <v-btn color="primary" text @click="dialogPayment = false,clearEvent()">
+                                                        cancel
+                                                    </v-btn>
+                                                </v-card-actions>
+                                            </v-card>
+                                        </v-dialog>
+
                                         <v-menu v-model="menu" :close-on-content-click="false" :nudge-width="200" offset-x>
                                             <template v-slot:activator="{ on, attrs }">
                                                 <v-btn outlined class="mr-4" color="grey darken-2" v-bind="attrs" v-on="on"><v-icon medium>mdi-arrow-up-bold-box-outline</v-icon></v-btn>
@@ -158,6 +190,7 @@
             vuetify: new Vuetify(),
             data: {
                 categories:['지출','수익'],
+                dialogPayment:false,
                 category:"지출",
                 menu: false,
                 readonly:true,
@@ -187,6 +220,10 @@
                 this.$refs.calendar.checkChange()
             },
             methods: {
+                clearEvent() {
+                    this.content=""
+                    this.money=""
+                },
                 moreEvent() {
                     console.log("more = "+this.$refs.calendar.moreEvents)
                 },
