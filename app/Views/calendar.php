@@ -17,7 +17,7 @@
             <v-main id="app">
                 <v-container>
                     <v-row class='fill-height'>
-                        <v-col cols="9">
+                        <v-col cols="8">
                         <v-sheet height="64">
                             <v-toolbar flat>
                                 <v-btn outlined class="mr-4" color="grey darken-2" @click="setToday">Today</v-btn>
@@ -29,7 +29,7 @@
                                     <div class="text-center">
                                         <v-menu v-model="menu" :close-on-content-click="false" :nudge-width="200" offset-x>
                                             <template v-slot:activator="{ on, attrs }">
-                                                <v-btn outlined class="mr-4" color="grey darken-2" v-bind="attrs" v-on="on"><v-icon small>mdi-arrow-up-bold-box-outline</v-icon></v-btn>
+                                                <v-btn outlined class="mr-4" color="grey darken-2" v-bind="attrs" v-on="on"><v-icon medium>mdi-arrow-up-bold-box-outline</v-icon></v-btn>
                                             </template>
 
                                             <v-card>
@@ -91,7 +91,7 @@
                                             </template>
                                             <v-card>
                                                 <v-card-title></v-card-title>
-                                                <v-card-text>삭제하실건가요?</v-card-text>
+                                                <v-card-text>해당 항목을 삭제하실건가요?</v-card-text>
                                                 <v-divider></v-divider>
                                                 <v-card-actions>
                                                     <v-spacer></v-spacer>
@@ -107,31 +107,39 @@
                                     </v-toolbar>
                                     <v-card-text>
                                         <v-text-field type="text" v-model="selectedEvent.details" label="내용" :readonly="readonly" outlined></v-text-field>
-                                        <v-currency-field v-model="selectedEvent.name" label="금액" filled outlined :decimal-length=0 :readonly="readonly"></v-currency-field>
+                                        <v-currency-field v-model="selectedEvent.money" label="금액" filled outlined :decimal-length=0 :readonly="readonly"></v-currency-field>
                                         <v-select :items="categories" v-model="selectedEvent.category" label="항목" dense outlined :readonly="readonly"></v-select>
                                         <v-spacer></v-spacer>
-                                        <v-btn :disabled="disabled" @click="editCalendar" icon><v-icon dark right>mdi-checkbox-marked-circle</v-icon></v-btn>
-                                </v-card-text>
-                                    <v-card-actions><v-btn text color="secondary" @click="selectedOpen = false,disabled = true, readonly=true,reload()">Cancel</v-btn></v-card-actions>
+                                        <v-row align="center" justify="end">
+                                            <v-btn color="primary" class="mr-4" :disabled="disabled" @click="editCalendar" icon>
+                                                <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
+                                            </v-btn>
+                                            <v-card-actions>
+                                                <v-btn text color="secondary" @click="selectedOpen = false,disabled = true, readonly=true,reload()">
+                                                    Cancel</v-btn>
+                                            </v-card-actions>
+                                        </v-row>
+                                    </v-card-text>
+                                    
                                 </v-card>
                             </v-menu>
                         </v-sheet>
                         </v-col>
-                        <v-col cols="2">
+                        <v-col cols="auto">
                         <v-card>
                             <v-card-title></v-card-title>
                                 <v-date-picker v-model="picker"></v-date-picker>
                             <v-divider></v-divider>
                             <v-spacer></v-spacer>
-                            <v-form ref="form" @submit.prevent="save" v-model="valid" lazy-validation>
+                            <v-form ref="form" @submit.prevent="save" lazy-validation>
                                 <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required outlined></v-text-field>
                                 <v-currency-field v-model="money" label="금액" filled outlined :decimal-length=0></v-currency-field>
                                 <v-select :items="categories" v-model="category" label="항목" dense outlined></v-select>
-                                    <a href="/calendar">
-                                    <v-btn color="success" class="mr-4" @click="register">
-                                        등록
-                                    </v-btn>                   
-                                    </a>
+                                    <v-row align="center" justify="end">
+                                        <v-btn color="primary" class="mr-4" @click="register(),reload()" icon>
+                                            <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
+                                        </v-btn>
+                                    </v-row>                
                             </v-form>
                         </v-card>
                         </v-col>
@@ -213,15 +221,18 @@
                             console.log(date.getMonth()+1)
                             if (date.getMonth()+1==month) {
                                 if (items[i]['category']=="지출") {
-                                    this.minus+=parseInt(items[i]['name'])
+                                    this.minus+=parseInt(items[i]['money'])
                                 } else {
-                                    this.plus+=parseInt(items[i]['name'])
+                                    this.plus+=parseInt(items[i]['money'])
                                 }
-                                this.sum+=parseInt(items[i]['name'])
+                                this.sum+=parseInt(items[i]['money'])
                             }
                         }
                     }
                     this.sum=this.plus-this.minus
+                    this.sum = this.valueComma(this.sum)
+                    this.plus = this.valueComma(this.plus)
+                    this.minus = this.valueComma(this.minus)
                     console.log("sum = "+this.sum)
                 },
                 change() {
@@ -316,7 +327,7 @@
                         method:'post',
                         data:{
                             id:event.id,
-                            money:event.name,
+                            money:event.money,
                             content:event.details,
                             year:year,
                             month:month,
@@ -332,13 +343,16 @@
                 },
                 main() {
                     location.href='/'
+                },
+                valueComma(val) {
+                    return String(parseInt(val)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 }
             },
             watch: {
                 events: function (newVal, oldVal) {
                     console.log("watch 실행!")
                     this.calc(0)
-                }
+                },
             },
             created() {
                 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -350,18 +364,20 @@
                             let hour = times.getHours()
                             let minute = times.getMinutes()
                             let seconds = times.getSeconds()
+                            let name = this.valueComma(res['data'][item]['money'])
                             if (res['data'][item]['category']=="수익") {
                                 color="light-blue accent-2"
                             }
                             this.events.push({
                                 id:res['data'][item]['id'],
-                                name:res['data'][item]['money'],
+                                name:name,
                                 start:new Date(res['data'][item]['year'],res['data'][item]['month'],res['data'][item]['day'],hour,minute,seconds),
                                 color:color,
                                 details:res['data'][item]['content'],
                                 timed:true,
                                 times:times,
-                                category:res['data'][item]['category']
+                                category:res['data'][item]['category'],
+                                money:res['data'][item]['money']
                             });
                         }
                     });

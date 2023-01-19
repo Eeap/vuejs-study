@@ -33,16 +33,19 @@ $routes->setAutoRoute(true);
 // route since we don't have to scan directories.
 $routes->get('/', 'Home::index');
 
-$routes->get('/write','Board::index');
+#$routes->get('/write','Board::index');
 $routes->get('/board','BoardRead::index');
 $routes->post('/board/write','BoardWrite::index');
 $routes->post('/board/delete','BoardDelete::index');
-$routes->get('/board/edit/*','BoardEdit::index');
-$routes->get('/board/detail/*','BoardPage::index');
+#$routes->get('/board/edit/*','BoardEdit::index');
+#$routes->get('/board/detail/*','BoardPage::index');
 $routes->post('/board/put','BoardPut::index');
 $routes->get('/calendar','Calendar::index');
 $routes->post('/calendar/write','CalendarWrite::index');
 $routes->get('/calendar/read','CalendarRead::index');
+$routes->post('/calendar/delete','CalendarDelete::index');
+$routes->get('/calendar/form','CalendarPage::index');
+$routes->post('/calendar/edit','CalendarEdit::index');
 /*
  * --------------------------------------------------------------------
  * Additional Routing

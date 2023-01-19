@@ -3,16 +3,11 @@
 namespace App\Controllers;
 class BoardRead extends BaseController
 {
-    // public function __construct(){
-    //     parent::__construct();
-    //     $this->load->database();
-    // }
     public function index()
     {
         $db = \Config\Database::connect("default");
-	$result = $db->query('select id,author,content,updatetime,createtime from boardTable')->getResultArray();
-	$result_json = json_encode($result);
-	#var_dump($result_json);
+	    $result = $db->query('select id,author,content,updatetime,createtime from boardTable order by createtime desc;')->getResultArray();
+	    $result_json = json_encode($result);
         return $result_json;
     }
 }

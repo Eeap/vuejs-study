@@ -1,115 +1,287 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.1.1/dist/vuetify.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-</head>
-<body>
-    <div id="app">
-        <v-app>
-            <v-app-bar app color="cyan" dark>
-                <v-app-bar-title>
-                    <div id="head"align="center">{{message}}</div>
-                    <v-btn outlined class="mr-4" color="grey darken-2" @click="calendar">Calendar</v-btn>
-                </v-app-bar-title>
-            </v-app-bar>
-            <v-main id="app">
-                <v-container>
-                    <v-row>
-                        <v-col cols="12" md="2">
-                            <a href="/write" method="get">
-                                <v-btn color="cyan" :style="{height:'50px', width:'80px', fontWeight:'bold', fontSize:'large'}">글작성</v-btn>        
-                            </a>
-                        </v-col>
-                    </v-row>
-            
-                    <v-card>
-                        <v-card-title>게시판</v-card-title>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>번호</th>
-                                        <th>내용</th>
-                                        <th>작성자</th>
-                                        <th>업데이트</th>
-                                        <th>등록시간</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="item in list" :key="item.no">
-                                        <td>{{ item.no }}</td>
-                                        <td>{{ item.content }}</td>
-                                        <td>{{ item.author }}</td>
-                                        <td>{{ item.update }}</td>
-                                        <td>{{ item.created }}</td>
-                                        <td><v-btn @click="editBoard(item.no)" tile color="success"><v-icon left>mdi-pencil</v-icon>
-                                        Edit
-                                        </v-btn></td>
-                                        <td><a href="/"><v-btn tile color="error" @click="delBoard(item.no)">X</v-btn></a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                    </v-card>
-                </v-container>
-            </v-main>
-        </v-app>
-    </div>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.1.1/dist/vuetify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://unpkg.com/vue-router@3.0.0/dist/vue-router.js"></script>
-    <script>
-        const { createApp } = Vue
-        const { createVuetify } = Vuetify
-        const vuetify = createVuetify()
-        const app = createApp({
-            data() {
-                return {
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    </head>
+    <body>
+        <div id="app">
+            <v-app>
+                <v-app-bar app="app" color="cyan" dark="dark">
+                    <v-app-bar-title>
+                        <v-btn outlined class="mr-4" color="grey darken-2" @click="calendar">Calendar</v-btn>
+                    </v-app-bar-title>
+                </v-app-bar>
+                <v-main id="app">
+                    <v-container>
+                        <v-row>
+                            <v-col cols="12" md="2">
+                                <v-spacer></v-spacer>
+                            </v-col>
+                        </v-row>
+
+                        <v-data-table :headers="headers" :items="list" sort-by="num" class="elevation-1" :search='search'>
+                            <template v-slot:top>
+                                <v-toolbar flat>
+                                    <v-toolbar-title>Board</v-toolbar-title>
+                                    <v-divider class="mx-4" inset vertical></v-divider>
+                                    <v-spacer></v-spacer>
+                                    <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details></v-text-field>
+                                    <v-spacer></v-spacer>
+                                    <v-dialog v-model="dialog" max-width="500px">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn color="indigo" class="mr-2" v-bind="attrs" v-on="on" outlined icon>
+                                                <v-icon>mdi-plus</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <v-card>
+                                            <v-card-title>
+                                                <span class="text-h5">{{ formTitle }}</span>
+                                            </v-card-title>
+                                            <v-card-text>
+                                                <v-container>
+                                                    <v-row>
+                                                        <v-text-field v-model="editedItem.author" label="author"></v-text-field>
+                                                    </v-row>
+                                                    <v-row>
+                                                        <v-textarea filled auto-grow v-model="editedItem.content" label="content"></v-textarea>
+                                                    </v-row>
+                                                </v-container>
+                                            </v-card-text>
+                                            <v-card-actions>
+                                                <v-spacer></v-spacer>
+                                                <v-btn color="primary" text="text" @click="close">cancel</v-btn>
+                                                <v-btn color="primary" text="text" @click="save">save</v-btn>
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-dialog>
+                                    <v-dialog v-model="dialogDelete" max-width="500">
+                                        <v-card>
+                                            <v-card-title></v-card-title>
+                                            <v-card-text>해당 글을 삭제하실건가요?</v-card-text>
+                                            <v-divider></v-divider>
+                                            <v-card-actions>
+                                                <v-spacer></v-spacer>
+                                                <v-btn color="primary" text="text" @click="deleteItemConfirm">yes</v-btn>
+                                                <v-btn color="primary" text="text" @click="closeDelete">no</v-btn>
+                                            </v-card-actions>
+                                        </v-card>
+                                    </v-dialog>
+                                </v-toolbar>
+                            </template>
+                            <template v-slot:item.actions="{ item }">
+                                <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
+                                <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
+                            </template>
+                        </v-data-table>
+                    </v-container>
+                </v-main>
+            </v-app>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <script>
+            new Vue({
+                el: "#app",
+                vuetify: new Vuetify(),
+                data: {
+                    dialog: false,
+                    dialogDelete: false,
                     message: "메인 게시판",
-                    list:[],
-                    url:""
-                }
-            },
-            methods: {
-                calendar() {
-                    location.href='/calendar'
-                },
-                delBoard:function(index) {
-                    console.log("test");
-                    console.log(index);
-                    axios.post("/board/delete",index)
-                    .then(res=>{console.log(res);})
-                },
-                editBoard:function(index) {
-                    this.url="/board/edit?id="+index;
-                    location.href=this.url;
-                }
-            },
-            created() {
-                axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-                axios.get("/board")
-                    .then(res => {
-                        for (let item in res['data']){
-                            console.log(item);
-                            this.list.push({
-                                no:res['data'][item]['id'],
-                                content:res['data'][item]['content'],
-                                author:res['data'][item]['author'],
-                                update:res['data'][item]['updatetime'],
-                                created:res['data'][item]['createtime']});
+                    url: "",
+                    arr: [],
+                    search: '',
+                    headers: [
+                        {
+                            text: '번호',
+                            align: 'start',
+                            value: 'num'
+                        }, {
+                            text: '내용',
+                            value: 'content'
+                        }, {
+                            text: '작성자',
+                            value: 'author'
+                        }, {
+                            text: '업데이트 시간',
+                            value: 'update'
+                        }, {
+                            text: '작성 시간',
+                            value: 'created'
+                        }, {
+                            text: '',
+                            value: 'actions',
+                            sortable: false
                         }
-                        console.log(res['data']);
-                    });
-                    console.log("test");
-            }
-        })
-        app.use(vuetify).mount('#app')
-    </script>
-</body>
+                    ],
+                    editedIndex: -1,
+                    editedItem: {
+                        num: 0,
+                        content: '',
+                        author: '',
+                        update: '',
+                        created: '',
+                        id: 0
+                    },
+                    defaultItem: {
+                        num: 0,
+                        content: '',
+                        author: '',
+                        update: '',
+                        created: '',
+                        id: -1
+                    },
+                    list: []
+                },
+                computed: {
+                    formTitle() {
+                        return this.editedIndex === -1
+                            ? 'New Form'
+                            : 'Edit Form'
+                    }
+                },
+
+                watch: {
+                    dialog(val) {
+                        val || this.close()
+                    },
+                    dialogDelete(val) {
+                        val || this.closeDelete()
+                    }
+                },
+                methods: {
+                    calendar() {
+                        location.href = '/calendar'
+                    },
+                    delBoard: function (index) {
+                        console.log("test");
+                        console.log(index);
+                        axios
+                            .post("/board/delete", index)
+                            .then(res => {
+                                console.log(res);
+                            })
+                    },
+                    editBoard: function (index) {
+                        this.url = "/board/edit?id=" + index;
+                        location.href = this.url;
+                    },
+                    editItem(item) {
+                        this.editedIndex = this
+                            .list
+                            .indexOf(item)
+                        this.editedItem = Object.assign({}, item)
+                        this.dialog = true
+                    },
+                    deleteItem(item) {
+                        this.editedIndex = this
+                            .list
+                            .indexOf(item)
+                        this.editedItem = Object.assign({}, item)
+                        this.dialogDelete = true
+                        console.log("delete index = " + this.editedIndex)
+                    },
+                    deleteItemConfirm() {
+                        axios
+                            .post("/board/delete", this.editedItem['id'])
+                            .then(res => {
+                                console.log(res);
+                            })
+                        location.href = '/'
+                    },
+                    close() {
+                        this.dialog = false
+                        this.$nextTick(() => {
+                            this.editedItem = Object.assign({}, this.defaultItem)
+                            this.editedIndex = -1
+                        })
+                    },
+                    closeDelete() {
+                        this.dialogDelete = false
+                        this.$nextTick(() => {
+                            this.editedItem = Object.assign({}, this.defaultItem)
+                            this.editedIndex = -1
+                        })
+                    },
+                    save() {
+                        if (this.editedIndex > -1) {
+                            //수정할때
+                            axios({
+                                url: "/board/put?id=" + this.editedItem['id'],
+                                method: 'post',
+                                data: {
+                                    author: this.editedItem['author'],
+                                    content: this.editedItem['content']
+                                },
+                                header: {
+                                    'Content-type': 'application/json'
+                                }
+                            })
+                                .then(res => {
+                                    console.log(res);
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+
+                        } else {
+                            //생성할때
+                            axios({
+                                url: "/board/write",
+                                method: 'post',
+                                data: {
+                                    author: this.editedItem['author'],
+                                    content: this.editedItem['content']
+                                },
+                                header: {
+                                    'Content-type': 'application/json'
+                                }
+                            })
+                                .then(res => {
+                                    console.log(res);
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        }
+                        location.href = '/'
+                    }
+                },
+                created() {
+                    axios
+                        .defaults
+                        .headers
+                        .common['X-Requested-With'] = 'XMLHttpRequest';
+                    axios
+                        .get("/board")
+                        .then(res => {
+                            for (let item in res['data']) {
+                                this
+                                    .arr
+                                    .push(parseInt(item) + 1);
+                                let num = parseInt(item) + 1;
+                                this
+                                    .list
+                                    .push({num: num, id: res['data'][item]['id'],
+                                        content: res['data'][item]['content'],
+                                        author: res['data'][item]['author'],
+                                        update: res['data'][item]['updatetime'],
+                                        created: res['data'][item]['createtime']
+                                    });
+                            }
+                            this
+                                .arr
+                                .reverse();
+                            console.log(this.arr);
+                            console.log(res['data']);
+                        });
+                }
+            })
+        </script>
+    </body>
 </html>

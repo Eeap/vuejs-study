@@ -1,7 +1,7 @@
 create table boardTable(
     id int auto_increment,
-    author varchar(50),
-    content varchar(100),
+    `author` varchar(50),
+    `content` varchar(100),
     updatetime DATETIME DEFAULT now(),
     createtime DATETIME DEFAULT now(),
     PRIMARY KEY(id)
