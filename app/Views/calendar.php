@@ -41,6 +41,29 @@
                                                 <v-card-text>
                                                     <v-container>
                                                         <v-form ref="form" @submit.prevent="save" lazy-validation>
+
+                                                            <v-row>
+                                                                <v-col cols="12" lg="6">
+                                                                    <v-menu ref="menu" v-model="menuStart" :close-on-content-click="false" transition="scale-transition" offset-y max-width="290px" min-width="auto">
+                                                                        <template v-slot:activator="{ on, attrs }">
+                                                                            <v-text-field v-model="dateStart" label="Start Date" persistent-hint prepend-icon="mdi-calendar" v-bind="attrs" v-on="on"></v-text-field>
+                                                                        </template>
+                                                                        <v-date-picker v-model="dateStart" no-title @input="menuStart = false"></v-date-picker>
+                                                                    </v-menu>
+                                                                    <p>Date in ISO format: <strong>{{ dateStart }}</strong></p>
+                                                                </v-col>
+                                                                <v-col cols="12" lg="6">
+                                                                    <v-menu ref="menu" v-model="menuLast" :close-on-content-click="false" transition="scale-transition" offset-y max-width="290px" min-width="auto">
+                                                                        <template v-slot:activator="{ on, attrs }">
+                                                                            <v-text-field v-model="dateLast" label="Last Date" persistent-hint prepend-icon="mdi-calendar" v-bind="attrs" v-on="on">
+                                                                            </v-text-field>
+                                                                        </template>
+                                                                        <v-date-picker v-model="dateLast" no-title @input="menuLast = false"></v-date-picker>
+                                                                    </v-menu>
+                                                                    <p>Date in ISO format: <strong>{{ dateLast }}</strong></p>
+                                                                </v-col>
+                                                            </v-row>
+                                                            <v-text-field type="text" v-model="regularDay" variant="filled" label="정규 날짜" required outlined></v-text-field>
                                                             <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required outlined></v-text-field>
                                                             <v-currency-field v-model="money" label="금액" filled outlined :decimal-length=0></v-currency-field>
                                                             <v-select :items="categories" v-model="category" label="항목" dense outlined></v-select>
@@ -49,7 +72,7 @@
                                                 </v-card-text>
                                                 <v-card-actions>
                                                     <v-spacer></v-spacer>
-                                                    <v-btn color="primary" class="mr-4" @click="register(),reload()" icon>
+                                                    <v-btn color="primary" class="mr-4" @click="registerRegular()" icon>
                                                         <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
                                                     </v-btn>
                                                     <v-btn color="primary" text @click="dialogPayment = false,clearEvent()">
@@ -189,6 +212,13 @@
             el: '#app',
             vuetify: new Vuetify(),
             data: {
+                regularDay:'',
+                dateStart: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+                dateLast: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+                dateFormattedStart: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+                dateFormattedLast: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+                menuStart: false,
+                menuLast: false,
                 categories:['지출','수익'],
                 dialogPayment:false,
                 category:"지출",
@@ -223,6 +253,8 @@
                 clearEvent() {
                     this.content=""
                     this.money=""
+                    this.dateLast= (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
+                    this.dateStart = (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)
                 },
                 moreEvent() {
                     console.log("more = "+this.$refs.calendar.moreEvents)
@@ -383,12 +415,44 @@
                 },
                 valueComma(val) {
                     return String(parseInt(val)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                },
+                formatDate (date) {
+                    if (!date) return null
+                    const [year, month, day] = date.split('-')
+                    return `${month}/${day}/${year}`
+                },
+                registerRegular() {
+                    let startDate =new Date(this.dateStart);
+                    let lastDate = new Date(this.dateLast);
+                    
+                    console.log(startDate.getFullYear());
+                    console.log(lastDate.getFullYear());
+                    // axios({
+                    //     url:"/calendar/write",
+                    //     method:'post',
+                    //     data:{
+                    //         content:this.content,
+                    //         money:this.money,
+                    //         year:year,
+                    //         month:month,
+                    //         day:day,
+                    //         category:this.category
+                    //     },
+                    //     header:{ 'Content-type': 'application/json'}
+                    // })
+                    // .then(res => {
+                    //     console.log(res);
+                    // }).catch(err =>{console.log(err);});
                 }
             },
             watch: {
                 events: function (newVal, oldVal) {
                     console.log("watch 실행!")
                     this.calc(0)
+                },
+                date (val) {
+                    this.dateFormattedStart = this.formatDate(this.dateStart)
+                    this.dateFormattedLast = this.formatDate(this.dateLast)
                 },
             },
             created() {
