@@ -34,7 +34,8 @@ $routes->setAutoRoute(true);
 $routes->get('/', 'Home::index');
 
 #$routes->get('/write','Board::index');
-$routes->get('/board','BoardRead::index');
+$routes->get('/board','Board::index');
+$routes->get('/board/read','BoardRead::index');
 $routes->post('/board/write','BoardWrite::index');
 $routes->post('/board/delete','BoardDelete::index');
 #$routes->get('/board/edit/*','BoardEdit::index');

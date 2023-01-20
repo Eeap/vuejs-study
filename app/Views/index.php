@@ -56,11 +56,11 @@
                             </v-list-item-icon>
                             <v-list-item-title>calendar</v-list-item-title>
                         </v-list-item>
-                        <v-list-item link>
+                        <v-list-item href="/board" link>
                             <v-list-item-icon>
                                 <v-icon>mdi-star</v-icon>
                             </v-list-item-icon>
-                            <v-list-item-title>Starred</v-list-item-title>
+                            <v-list-item-title>board</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-navigation-drawer>
@@ -247,7 +247,7 @@
                             .then(res => {
                                 console.log(res);
                             })
-                        location.href = '/'
+                        location.href = '/board'
                     },
                     close() {
                         this.dialog = false
@@ -309,7 +309,7 @@
                                 });
                         }
                         this.disabled = false
-                        location.href = '/'
+                        location.href = '/board'
                     },
                     showEvent(item) {
                         this.disabled = true
@@ -344,7 +344,7 @@
                         .headers
                         .common['X-Requested-With'] = 'XMLHttpRequest';
                     axios
-                        .get("/board")
+                        .get("/board/read")
                         .then(res => {
                             for (let item in res['data']) {
                                 this
