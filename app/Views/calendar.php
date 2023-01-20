@@ -29,7 +29,7 @@
                                     <div class="text-center">
                                         <v-dialog v-model="dialogPayment" max-width="500px">
                                             <template v-slot:activator="{ on, attrs }">
-                                                <v-btn color="indigo" class="mr-2" v-bind="attrs" v-on="on" outlined icon>
+                                                <v-btn color="indigo" class="mr-2" v-bind="attrs" v-on="on" outlined icon small>
                                                     <v-icon>mdi-plus</v-icon>
                                                 </v-btn>
                                             </template>

@@ -24,7 +24,7 @@
                             </v-col>
                         </v-row>
 
-                        <v-data-table :headers="headers" :items="list" sort-by="num" class="elevation-1" :search='search'>
+                        <v-data-table :headers="headers" :items="list" sort-by="num" class="elevation-1" :search='search' :custom-filter="customFilter">
                             <template v-slot:top>
                                 <v-toolbar flat>
                                     <v-toolbar-title>Board</v-toolbar-title>
@@ -45,17 +45,17 @@
                                             <v-card-text>
                                                 <v-container>
                                                     <v-row>
-                                                        <v-text-field v-model="editedItem.author" label="author"></v-text-field>
+                                                        <v-text-field v-model="editedItem.author" label="author" :readonly="readonly"></v-text-field>
                                                     </v-row>
                                                     <v-row>
-                                                        <v-textarea filled auto-grow v-model="editedItem.content" label="content"></v-textarea>
+                                                        <v-textarea filled auto-grow v-model="editedItem.content" label="content" :readonly="readonly"></v-textarea>
                                                     </v-row>
                                                 </v-container>
                                             </v-card-text>
                                             <v-card-actions>
                                                 <v-spacer></v-spacer>
-                                                <v-btn color="primary" text="text" @click="close">cancel</v-btn>
-                                                <v-btn color="primary" text="text" @click="save">save</v-btn>
+                                                <v-btn color="primary" text="text" @click="close" :disabled="disabled">cancel</v-btn>
+                                                <v-btn color="primary" text="text" @click="save" :disabled="disabled">save</v-btn>
                                             </v-card-actions>
                                         </v-card>
                                     </v-dialog>
@@ -74,6 +74,7 @@
                                 </v-toolbar>
                             </template>
                             <template v-slot:item.actions="{ item }">
+                                <v-icon small @click="showEvent(item)">mdi-message-text</v-icon>
                                 <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
                                 <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
                             </template>
@@ -90,35 +91,14 @@
                 el: "#app",
                 vuetify: new Vuetify(),
                 data: {
+                    disabled:false,
                     dialog: false,
                     dialogDelete: false,
                     message: "메인 게시판",
                     url: "",
                     arr: [],
                     search: '',
-                    headers: [
-                        {
-                            text: '번호',
-                            align: 'start',
-                            value: 'num'
-                        }, {
-                            text: '내용',
-                            value: 'content'
-                        }, {
-                            text: '작성자',
-                            value: 'author'
-                        }, {
-                            text: '업데이트 시간',
-                            value: 'update'
-                        }, {
-                            text: '작성 시간',
-                            value: 'created'
-                        }, {
-                            text: '',
-                            value: 'actions',
-                            sortable: false
-                        }
-                    ],
+                    readonly:false,
                     editedIndex: -1,
                     editedItem: {
                         num: 0,
@@ -140,10 +120,39 @@
                 },
                 computed: {
                     formTitle() {
-                        return this.editedIndex === -1
+                        let text =  (this.editedIndex === -1
                             ? 'New Form'
-                            : 'Edit Form'
-                    }
+                            : 'Edit Form')
+                        if (this.readonly) {
+                            text = "Details"
+                        }
+                        return text
+                    },
+                    headers() {
+                        return [
+                        {
+                            text: '번호',
+                            align: 'start',
+                            value: 'num'
+                        }, {
+                            text: '내용',
+                            value: 'content'
+                        }, {
+                            text: '작성자',
+                            value: 'author'
+                        }, {
+                            text: '업데이트 시간',
+                            value: 'update'
+                        }, {
+                            text: '작성 시간',
+                            value: 'created'
+                        }, {
+                            text: '',
+                            value: 'actions',
+                            sortable: false
+                        }
+                    ]
+                    }, 
                 },
 
                 watch: {
@@ -172,6 +181,8 @@
                         location.href = this.url;
                     },
                     editItem(item) {
+                        this.readonly=false
+                        this.disabled=false
                         this.editedIndex = this
                             .list
                             .indexOf(item)
@@ -200,6 +211,8 @@
                             this.editedItem = Object.assign({}, this.defaultItem)
                             this.editedIndex = -1
                         })
+                        this.readonly=false
+                        this.disabled=false
                     },
                     closeDelete() {
                         this.dialogDelete = false
@@ -207,6 +220,8 @@
                             this.editedItem = Object.assign({}, this.defaultItem)
                             this.editedIndex = -1
                         })
+                        this.readonly=false
+                        this.disabled=false
                     },
                     save() {
                         if (this.editedIndex > -1) {
@@ -249,7 +264,34 @@
                                     console.log(err);
                                 });
                         }
+                        this.disabled=false
                         location.href = '/'
+                    },
+                    showEvent(item) {
+                        this.disabled=true
+                        this.editedIndex = this
+                            .list
+                            .indexOf(item)
+                        this.editedItem = Object.assign({}, item)
+                        this.dialog = true
+                    },
+                    customFilter(value, search, item) {
+                        if (typeof value !== 'string') {
+                            return false
+                        }
+                        let check = true
+                        if (value.toString().indexOf(search) === -1) {
+                            check = false
+                        }
+                        else {
+                            for (let i =0; i<10;i++) {
+                                if (search.toString().indexOf(i) !== -1) {
+                                    check = false
+                                    break
+                                }
+                            }
+                        }
+                        return value != null && search !=null && check
                     }
                 },
                 created() {
