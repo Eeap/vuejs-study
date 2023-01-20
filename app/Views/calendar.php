@@ -50,7 +50,6 @@
                                                                         </template>
                                                                         <v-date-picker v-model="dateStart" no-title @input="menuStart = false"></v-date-picker>
                                                                     </v-menu>
-                                                                    <p>Date in ISO format: <strong>{{ dateStart }}</strong></p>
                                                                 </v-col>
                                                                 <v-col cols="12" lg="6">
                                                                     <v-menu ref="menu" v-model="menuLast" :close-on-content-click="false" transition="scale-transition" offset-y max-width="290px" min-width="auto">
@@ -60,12 +59,11 @@
                                                                         </template>
                                                                         <v-date-picker v-model="dateLast" no-title @input="menuLast = false"></v-date-picker>
                                                                     </v-menu>
-                                                                    <p>Date in ISO format: <strong>{{ dateLast }}</strong></p>
                                                                 </v-col>
                                                             </v-row>
-                                                            <v-text-field type="text" v-model="regularDay" variant="filled" label="정규 날짜" required outlined></v-text-field>
-                                                            <v-text-field id="content" name="content" type="text" v-model="content" variant="filled" label="내용" required outlined></v-text-field>
-                                                            <v-currency-field v-model="money" label="금액" filled outlined :decimal-length=0></v-currency-field>
+                                                            <v-text-field type="text" v-model="regularDay" variant="filled" label="정기 날짜" required outlined></v-text-field>
+                                                            <v-text-field id="content" name="regularContent" type="text" v-model="regularContent" variant="filled" label="내용" required outlined></v-text-field>
+                                                            <v-currency-field v-model="regularMoney" label="금액" filled outlined :decimal-length=0></v-currency-field>
                                                             <v-select :items="categories" v-model="category" label="항목" dense outlined></v-select>
                                                         </v-form>
                                                     </v-container>
@@ -193,7 +191,7 @@
                                     <v-row align="center" justify="end">
                                         <v-btn color="primary" class="mr-4" @click="register(),reload()" icon>
                                             <v-icon dark right>mdi-checkbox-marked-circle</v-icon>
-                                        </v-btn>
+                                        </v-btn> 
                                     </v-row>                
                             </v-form>
                         </v-card>
@@ -212,6 +210,8 @@
             el: '#app',
             vuetify: new Vuetify(),
             data: {
+                regularContent:'',
+                regularMoney:'',
                 regularDay:'',
                 dateStart: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
                 dateLast: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
@@ -421,12 +421,59 @@
                     const [year, month, day] = date.split('-')
                     return `${month}/${day}/${year}`
                 },
+                registerAPI(content,money,year,month,day,category) {
+                    axios({
+                        url:"/calendar/write",
+                        method:'post',
+                        data:{
+                            content:content,
+                            money:money,
+                            year:year,
+                            month:month,
+                            day:day,
+                            category:category
+                        },
+                        header:{ 'Content-type': 'application/json'}
+                    })
+                    .then(res => {
+                        console.log(res);
+                    }).catch(err =>{console.log(err);});
+                },
                 registerRegular() {
                     let startDate =new Date(this.dateStart);
                     let lastDate = new Date(this.dateLast);
                     
                     console.log(startDate.getFullYear());
                     console.log(lastDate.getFullYear());
+                    let lastYear = lastDate.getFullYear()
+                    let startYear = startDate.getFullYear()
+                    let startMonth = startDate.getMonth()
+                    let lastMonth = lastDate.getMonth()
+                    let check = false
+                    for (let y=startYear;y<lastYear;y++) {
+                        if ((lastYear-startYear)==y){
+                            break;
+                        }
+                        else {
+                            check = true
+                            for (let m=startMonth;m<12;m++) {
+                                this.registerAPI(this.regularContent,this.regularMoney,y,m,this.regularDay,this.category)
+                            }
+                        }
+                    }
+                    if (check) {
+                        //1월부터 시작 1월은 0을 의미
+                        for (let m=0;m<lastMonth+1;m++) {
+                            this.registerAPI(this.regularContent,this.regularMoney,lastYear,m,this.regularDay,this.category)
+                        }
+                    }
+                    else {
+                        for (let m=startMonth;m<lastMonth+1;m++) {
+                            this.registerAPI(this.regularContent,this.regularMoney,lastYear,m,this.regularDay,this.category)
+                        }
+                    }
+                    location.href='/calendar'
+
                     // axios({
                     //     url:"/calendar/write",
                     //     method:'post',
