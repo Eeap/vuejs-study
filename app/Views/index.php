@@ -3,22 +3,75 @@
     <head>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <link
+            href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900"
+            rel="stylesheet">
+        <link
+            href="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.css"
+            rel="stylesheet">
+        <link
+            href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css"
+            rel="stylesheet">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     </head>
     <body>
         <div id="app">
             <v-app>
-                <v-app-bar app="app" color="cyan" dark="dark">
+                <v-navigation-drawer
+                    permanent
+                    expand-on-hover
+                    app>
+                    <v-list>
+                        <v-list-item class="px-2">
+                            <v-list-item-avatar>
+                                <v-icon>fas fa-user</v-icon>
+                            </v-list-item-avatar>
+                        </v-list-item>
+
+                        <v-list-item link>
+                            <v-list-item-content>
+                                <v-list-item-title class="text-h6">
+                                    Eeap
+                                </v-list-item-title>
+                                <v-list-item-subtitle>sumink0903@gmail.com</v-list-item-subtitle>
+                            </v-list-item-content>
+                        </v-list-item>
+                    </v-list>
+
+                    <v-divider></v-divider>
+
+                    <v-list nav dense>
+                        <v-list-item href="/" link>
+                            <v-list-item-icon>
+                                <v-icon>fas fa-house</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>home</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="/calendar" link>
+                            <v-list-item-icon>
+                                <v-icon>fas fa-calendar</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>calendar</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item link>
+                            <v-list-item-icon>
+                                <v-icon>mdi-star</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Starred</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-navigation-drawer>
+
+                <v-app-bar>
                     <v-app-bar-title>
-                        <v-btn outlined class="mr-4" color="grey darken-2" @click="calendar">Calendar</v-btn>
                     </v-app-bar-title>
                 </v-app-bar>
-                <v-main id="app">
-                    <v-container>
-                        <v-row>
+                <v-main>
+                    <v-container fluid>
+                    <v-row>
                             <v-col cols="12" md="2">
                                 <v-spacer></v-spacer>
                             </v-col>
@@ -34,8 +87,8 @@
                                     <v-spacer></v-spacer>
                                     <v-dialog v-model="dialog" max-width="500px">
                                         <template v-slot:activator="{ on, attrs }">
-                                            <v-btn color="indigo" class="mr-2" v-bind="attrs" v-on="on" outlined icon>
-                                                <v-icon>mdi-plus</v-icon>
+                                            <v-btn v-bind="attrs" v-on="on" icon>
+                                                <v-icon>fas fa-thin fa-square-plus</v-icon>
                                             </v-btn>
                                         </template>
                                         <v-card>
@@ -54,7 +107,7 @@
                                             </v-card-text>
                                             <v-card-actions>
                                                 <v-spacer></v-spacer>
-                                                <v-btn color="primary" text="text" @click="close" :disabled="disabled">cancel</v-btn>
+                                                <v-btn color="primary" text="text" @click="close">cancel</v-btn>
                                                 <v-btn color="primary" text="text" @click="save" :disabled="disabled">save</v-btn>
                                             </v-card-actions>
                                         </v-card>
@@ -81,8 +134,11 @@
                         </v-data-table>
                     </v-container>
                 </v-main>
+
+                <v-footer app></v-footer>
             </v-app>
         </div>
+        
         <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vuetify@2.6.14/dist/vuetify.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -91,14 +147,13 @@
                 el: "#app",
                 vuetify: new Vuetify(),
                 data: {
-                    disabled:false,
+                    disabled: false,
                     dialog: false,
                     dialogDelete: false,
-                    message: "메인 게시판",
                     url: "",
                     arr: [],
                     search: '',
-                    readonly:false,
+                    readonly: false,
                     editedIndex: -1,
                     editedItem: {
                         num: 0,
@@ -120,9 +175,11 @@
                 },
                 computed: {
                     formTitle() {
-                        let text =  (this.editedIndex === -1
-                            ? 'New Form'
-                            : 'Edit Form')
+                        let text = (
+                            this.editedIndex === -1
+                                ? 'New Form'
+                                : 'Edit Form'
+                        )
                         if (this.readonly) {
                             text = "Details"
                         }
@@ -130,29 +187,29 @@
                     },
                     headers() {
                         return [
-                        {
-                            text: '번호',
-                            align: 'start',
-                            value: 'num'
-                        }, {
-                            text: '내용',
-                            value: 'content'
-                        }, {
-                            text: '작성자',
-                            value: 'author'
-                        }, {
-                            text: '업데이트 시간',
-                            value: 'update'
-                        }, {
-                            text: '작성 시간',
-                            value: 'created'
-                        }, {
-                            text: '',
-                            value: 'actions',
-                            sortable: false
-                        }
-                    ]
-                    }, 
+                            {
+                                text: '번호',
+                                align: 'start',
+                                value: 'num'
+                            }, {
+                                text: '내용',
+                                value: 'content'
+                            }, {
+                                text: '작성자',
+                                value: 'author'
+                            }, {
+                                text: '업데이트 시간',
+                                value: 'update'
+                            }, {
+                                text: '작성 시간',
+                                value: 'created'
+                            }, {
+                                text: '',
+                                value: 'actions',
+                                sortable: false
+                            }
+                        ]
+                    }
                 },
 
                 watch: {
@@ -167,22 +224,9 @@
                     calendar() {
                         location.href = '/calendar'
                     },
-                    delBoard: function (index) {
-                        console.log("test");
-                        console.log(index);
-                        axios
-                            .post("/board/delete", index)
-                            .then(res => {
-                                console.log(res);
-                            })
-                    },
-                    editBoard: function (index) {
-                        this.url = "/board/edit?id=" + index;
-                        location.href = this.url;
-                    },
                     editItem(item) {
-                        this.readonly=false
-                        this.disabled=false
+                        this.readonly = false
+                        this.disabled = false
                         this.editedIndex = this
                             .list
                             .indexOf(item)
@@ -211,8 +255,8 @@
                             this.editedItem = Object.assign({}, this.defaultItem)
                             this.editedIndex = -1
                         })
-                        this.readonly=false
-                        this.disabled=false
+                        this.readonly = false
+                        this.disabled = false
                     },
                     closeDelete() {
                         this.dialogDelete = false
@@ -220,8 +264,8 @@
                             this.editedItem = Object.assign({}, this.defaultItem)
                             this.editedIndex = -1
                         })
-                        this.readonly=false
-                        this.disabled=false
+                        this.readonly = false
+                        this.disabled = false
                     },
                     save() {
                         if (this.editedIndex > -1) {
@@ -264,11 +308,12 @@
                                     console.log(err);
                                 });
                         }
-                        this.disabled=false
+                        this.disabled = false
                         location.href = '/'
                     },
                     showEvent(item) {
-                        this.disabled=true
+                        this.disabled = true
+                        this.readonly = true
                         this.editedIndex = this
                             .list
                             .indexOf(item)
@@ -282,16 +327,15 @@
                         let check = true
                         if (value.toString().indexOf(search) === -1) {
                             check = false
-                        }
-                        else {
-                            for (let i =0; i<10;i++) {
+                        } else {
+                            for (let i = 0; i < 10; i++) {
                                 if (search.toString().indexOf(i) !== -1) {
                                     check = false
                                     break
                                 }
                             }
                         }
-                        return value != null && search !=null && check
+                        return value != null && search != null && check
                     }
                 },
                 created() {
